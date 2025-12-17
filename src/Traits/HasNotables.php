@@ -4,6 +4,7 @@ namespace MohamedSaid\Notable\Traits;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Collection;
 use MohamedSaid\Notable\Notable;
 
 trait HasNotables
@@ -11,6 +12,11 @@ trait HasNotables
     public function notables(): MorphMany
     {
         return $this->morphMany(Notable::class, 'notable')->orderBy(config('notable.order_by_column', 'created_at'), config('notable.order_by_direction', 'desc'));
+    }
+
+    public function notablesQuery(): MorphMany
+    {
+        return $this->notables()->latest();
     }
 
     public function addNote(string $note, ?Model $creator = null): Notable
@@ -25,9 +31,14 @@ trait HasNotables
         return $this->notables()->create($data);
     }
 
-    public function getNotes()
+    public function getNotes(?int $limit = null): Collection
     {
-        return $this->notables()->orderBy('created_at', 'desc')->get();
+        if ($limit) {
+            return $this->notablesQuery()->limit($limit)->get();
+        }
+
+        return $this->notablesQuery()->get();
+//        return $this->notables()->orderBy('created_at', 'desc')->get();
     }
 
     public function getLatestNote(): ?Notable
